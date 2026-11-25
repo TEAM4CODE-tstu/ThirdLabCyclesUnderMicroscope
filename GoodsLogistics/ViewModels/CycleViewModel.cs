@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace SortingAggregator.ViewModels
 {
@@ -40,6 +41,14 @@ namespace SortingAggregator.ViewModels
         private ObservableCollection<CycleModeInfo> _modes;
 
         private CycleVerifier _verifier;
+
+        // ===== Таймер автопрогона: интервал = пауза между шагами =====
+        private readonly DispatcherTimer _timer = new()
+        {
+            Interval = TimeSpan.FromMilliseconds(800)
+        };
+
+        private bool _isRunning;
 
         public int Length { get => _length; set => SetProperty(ref _length, value); }
         public int MinVal { get => _minVal; set => SetProperty(ref _minVal, value); }
@@ -141,6 +150,17 @@ namespace SortingAggregator.ViewModels
             set => SetProperty(ref _currentStepIndex, value);
         }
 
+        // Автопрогон: включает/выключает таймер
+        public bool IsRunning
+        {
+            get => _isRunning;
+            private set
+            {
+                if (SetProperty(ref _isRunning, value))
+                    _timer.IsEnabled = value;
+            }
+        }
+
         public ICommand StepCommand { get; }
         public ICommand RunCommand { get; }
         public ICommand ResetCommand { get; }
@@ -155,6 +175,9 @@ namespace SortingAggregator.ViewModels
 
         public CycleViewModel()
         {
+            // Каждый тик таймера = один шаг цикла
+            _timer.Tick += (_, _) => DoStep();
+
             Modes = new ObservableCollection<CycleModeInfo>(CyclePresets.GetModes());
             SelectedMode = Modes.FirstOrDefault();
             _arrayItems = new ObservableCollection<ArrayItemViewModel>();
@@ -212,6 +235,8 @@ namespace SortingAggregator.ViewModels
 
         private void ResetSimulation()
         {
+            IsRunning = false; // «Сброс» останавливает автопрогон
+
             if (SelectedMode == null || ArrayItems == null || ArrayItems.Count == 0) return;
 
             _verifier = new CycleVerifier(ArrayItems.Select(x => x.Value).ToArray(), Threshold, SelectedMode);
@@ -241,7 +266,10 @@ namespace SortingAggregator.ViewModels
         {
             if (_verifier == null || _verifier.IsFinished())
             {
-                InvStatusText = "Цикл завершен.";
+                IsRunning = false; // автопрогон останавливается сам
+
+                bool postOk = _verifier != null && _verifier.CheckPostCondition();
+                InvStatusText = postOk ? "Постусловие: ВЫПОЛНЕНО" : "Постусловие: НЕ ВЫПОЛНЕНО";
                 return;
             }
 
@@ -266,13 +294,14 @@ namespace SortingAggregator.ViewModels
             VariantProgress = percent;
         }
 
+        // Пуск/пауза автопрогона: таймер сам вызывает DoStep каждые 800 мс
         private void DoRun()
         {
-            ResetSimulation();
-            while (!_verifier.IsFinished()) DoStep();
+            // Если цикл уже дошли до конца — начнём заново
+            if (_verifier == null || _verifier.IsFinished())
+                ResetSimulation();
 
-            bool postOk = _verifier.CheckPostCondition();
-            InvStatusText = postOk ? "Постусловие: ВЫПОЛНЕНО" : "Постусловие: НЕ ВЫПОЛНЕНО";
+            IsRunning = !IsRunning; // Пуск → пауза → Пуск...
         }
 
         protected override bool CheckPre(out string failReason)
