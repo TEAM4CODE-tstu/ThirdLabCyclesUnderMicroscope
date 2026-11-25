@@ -1,0 +1,51 @@
+﻿<Window x:Class="GoodsLogistics.Views.ConditionsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Условия корректности"
+        Width="620" Height="400"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize"
+        Background="LightBlue">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Секция 1: текст условий корректности -->
+        <TextBlock Grid.Row="0"
+                   Text="Условия корректности:"
+                   FontFamily="Trebuchet MS"
+                   FontSize="14"
+                   FontWeight="Bold"
+                   Margin="0,0,0,8"/>
+
+        <TextBox Grid.Row="1"
+                 Text="{Binding CorrectnessConditions}"
+                 IsReadOnly="True"
+                 FontFamily="Trebuchet MS"
+                 FontSize="14"
+                 TextWrapping="Wrap"
+                 VerticalScrollBarVisibility="Auto"
+                 Padding="8"
+                 Background="White"
+                 BorderBrush="Black"
+                 BorderThickness="1"/>
+
+        <!-- Кнопка закрытия внизу справа -->
+        <Button Grid.Row="2"
+                Content="Закрыть"
+                Click="CloseButton_Click"
+                FontFamily="Trebuchet MS"
+                FontSize="14"
+                Padding="24,6"
+                MinWidth="140"
+                Height="36"
+                Background="LightGray"
+                BorderThickness="0"
+                HorizontalAlignment="Right"
+                Margin="0,14,0,0"/>
+    </Grid>
+</Window>

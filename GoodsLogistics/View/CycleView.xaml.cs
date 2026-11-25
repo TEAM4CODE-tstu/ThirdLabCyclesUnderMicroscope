@@ -1,12 +1,21 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
 
-namespace GoodsLogistics.Views
+namespace GoodsLogistics.Views;
+
+public partial class CycleView : UserControl
 {
-    public partial class CycleView : UserControl
+    public CycleView()
     {
-        public CycleView()
+        InitializeComponent();
+    }
+
+    private void ShowConditions_Click(object sender, RoutedEventArgs e)
+    {
+        var window = new ConditionsWindow(DataContext)
         {
-            InitializeComponent();
-        }
+            Owner = Window.GetWindow(this)
+        };
+        window.ShowDialog();
     }
 }
